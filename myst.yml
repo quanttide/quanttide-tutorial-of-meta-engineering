@@ -17,6 +17,7 @@ project:
         - file: intro/index.md
         - title: 形而上学
           children:
+            - file: intro/metaphysics/index.md
             - file: intro/metaphysics/metaphysics.md
             - file: intro/metaphysics/ontology.md
             - file: intro/metaphysics/ontologic_category.md
