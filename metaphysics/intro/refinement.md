@@ -48,13 +48,13 @@ R ⊆ S_C × S_A
 
 第一条读作：每个可能的初始具体状态都能翻译回一个合法的初始抽象状态。第二条读作：具体每走一步，抽象都必须能跟着走一步，走完两边还连着。第三条读作：具体那边没破规矩，翻回去的抽象状态也没破。三条证完，这份实现就是这份规格的落地——B 方法、Event-B、TLA+ 里的细化证明都是这个模板。
 
-拿提款机走一遍。抽象规格只有一步扣款：
+拿一笔支付扣款走一遍。抽象规格只有一步扣款：
 
 ```text
 State_A ::= balance : Account → ℤ
 inv_A   ≡ ∀ a · balance(a) ≥ 0
 
-Withdraw(a, amt):
+Debit(a, amt):
   pre:  amt ≤ balance(a)
   post: balance' = balance ⊕ {a ↦ balance(a) − amt}
 ```
@@ -86,7 +86,7 @@ R(c, a) ≡ balance_A(a) = balance_C(c) + frozen_C(c)
 
 读作：抽象那边的余额，等于具体这边看得见的余额加上还没扣完的冻结额。抽象层看不见「冻结」这个内部东西，翻译的时候要把它加回去。
 
-三条义务逐条过。初始时 `frozen = 0`，两边余额相等，第一条成立。`Freeze` 走一步之后，具体把 `amt` 从 `balance` 挪进 `frozen`，抽象那边走一步 `Withdraw` 直接扣掉 `amt`，两条式子仍然相等，第二条成立。`Commit` 在抽象里没有对应动作——这完全合法，抽象层看不见的内部收尾不需要外部动作配合。不变量方面，抽象要求 `balance_A ≥ 0`；按桥换过去，具体这边 `balance_C = balance_A − frozen ≥ 0` 自然成立，第三条成立。
+三条义务逐条过。初始时 `frozen = 0`，两边余额相等，第一条成立。`Freeze` 走一步之后，具体把 `amt` 从 `balance` 挪进 `frozen`，抽象那边走一步 `Debit` 直接扣掉 `amt`，两条式子仍然相等，第二条成立。`Commit` 在抽象里没有对应动作——这完全合法，抽象层看不见的内部收尾不需要外部动作配合。不变量方面，抽象要求 `balance_A ≥ 0`；按桥换过去，具体这边 `balance_C = balance_A − frozen ≥ 0` 自然成立，第三条成立。
 
 两条线记牢，一句话：实现可以更严、更细、更啰嗦，不能更松、更粗、更偷懒。拆开是三对照。信息上，具体层可以藏内部细节，不能暴露抽象没承诺过的可观察行为。保证上，具体层的前置条件可以更严（更早拦住非法调用），不能削弱抽象承诺的后置条件和不变量。步骤上，具体层可以把一步拆成多步，不能把多步合成一步还声称是同一份规格——那是抽象，方向反了。
 
@@ -99,7 +99,7 @@ R(c, a) ≡ balance_A(a) = balance_C(c) + frozen_C(c)
 ```rust
 trait Account {
     fn balance(&self) -> i64;
-    fn withdraw(&mut self, amt: i64) -> Result<(), &'static str>;
+    fn debit(&mut self, amt: i64) -> Result<(), &'static str>;
 }
 
 struct FrozenAccount {         // 具体层：多了一个内部冻结额
@@ -109,7 +109,7 @@ struct FrozenAccount {         // 具体层：多了一个内部冻结额
 
 impl Account for FrozenAccount {
     fn balance(&self) -> i64 { self.balance + self.frozen }   // 投影回抽象层
-    fn withdraw(&mut self, amt: i64) -> Result<(), &'static str> {
+    fn debit(&mut self, amt: i64) -> Result<(), &'static str> {
         if amt > self.balance { return Err("余额不足"); }      // 更严的前置条件
         self.frozen += amt;
         self.balance -= amt;
@@ -123,7 +123,7 @@ impl Account for FrozenAccount {
 ```typescript
 interface Account {                    // 抽象层：只承诺这两个
   balance(): number;
-  withdraw(amount: number): void;
+  debit(amount: number): void;
 }
 
 class FrozenAccount implements Account {
@@ -131,7 +131,7 @@ class FrozenAccount implements Account {
   constructor(private visible: number) {}
 
   balance(): number { return this.visible + this.frozen; }
-  withdraw(amount: number): void {
+  debit(amount: number): void {
     if (amount > this.visible) throw new Error("余额不足");
     this.frozen += amount;
     this.visible -= amount;
@@ -146,7 +146,7 @@ from typing import Protocol
 
 class Account(Protocol):               # 抽象层
     def balance(self) -> int: ...
-    def withdraw(self, amount: int) -> None: ...
+    def debit(self, amount: int) -> None: ...
 
 class FrozenAccount:                   # 具体层
     def __init__(self, visible: int = 0) -> None:
@@ -156,7 +156,7 @@ class FrozenAccount:                   # 具体层
     def balance(self) -> int:
         return self._visible + self._frozen
 
-    def withdraw(self, amount: int) -> None:
+    def debit(self, amount: int) -> None:
         if amount > self._visible:
             raise ValueError("余额不足")
         self._frozen += amount
@@ -168,7 +168,7 @@ class FrozenAccount:                   # 具体层
 ```go
 type Account interface { // 抽象层
 	Balance() int
-	Withdraw(amount int) error
+	Debit(amount int) error
 }
 
 type FrozenAccount struct { // 具体层，字段不导出
@@ -178,7 +178,7 @@ type FrozenAccount struct { // 具体层，字段不导出
 
 func (a *FrozenAccount) Balance() int { return a.visible + a.frozen }
 
-func (a *FrozenAccount) Withdraw(amount int) error {
+func (a *FrozenAccount) Debit(amount int) error {
 	if amount > a.visible {
 		return errors.New("余额不足")
 	}
@@ -193,7 +193,7 @@ func (a *FrozenAccount) Withdraw(amount int) error {
 ```dart
 abstract class Account {           // 抽象层
   int balance();
-  void withdraw(int amount);
+  void debit(int amount);
 }
 
 class FrozenAccount implements Account {
@@ -205,7 +205,7 @@ class FrozenAccount implements Account {
   int balance() => _visible + _frozen;
 
   @override
-  void withdraw(int amount) {
+  void debit(int amount) {
     if (amount > _visible) throw StateError('余额不足');
     _frozen += amount;
     _visible -= amount;

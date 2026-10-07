@@ -95,21 +95,21 @@ f : S → S，g : S → S   给出   f ⊗ g : S ⊗ S → S ⊗ S
 函子就是 `map`。把 `f : A → B` 抬到容器层面，得到 `F(A) → F(B)`，你写的是同一个 `f`，容器替你负责装东西那部分。
 
 ```typescript
-const orders: Order[] = ...;
-const paid: boolean[] = orders.map((o) => o.payment === "paid");  // Array 作为函子
+const payments: Payment[] = ...;
+const amounts: number[] = payments.map((p) => p.amount);   // Array 作为函子
 ```
 
 ```rust
-let amount: Option<i64> = order.paid_amount();
+let amount: Option<i64> = payment.amount();
 let doubled: Option<i64> = amount.map(|a| a * 2);   // Option 作为函子
 ```
 
 积就是结构体和它的字段访问。`π₁`、`π₂` 在这里叫 `a.0` 和 `a.1`，或者叫字段名；「恰好一种配对方式」在代码里就是那个结构体字面量。
 
 ```rust
-struct AcctLock { acct: Account, lock: FileLock }
-let al = AcctLock { acct, lock };      // 唯一的配对方式
-let a = &al.acct;                      // π₁
+struct Charge { account: Account, payment: Payment }
+let ch = Charge { account, payment };   // 唯一的配对方式
+let a = &ch.account;                    // π₁
 ```
 
 幺半就是可组合的链：每一步的输出是下一步的输入，串起来的顺序不影响「它们各自是正确的」这件事。
@@ -117,7 +117,7 @@ let a = &al.acct;                      // π₁
 ```python
 from functools import reduce
 
-steps = [check_quota, freeze, debit, append_log]      # 每一步都是 S → S
+steps = [check_limit, freeze, debit, append_log]      # 每一步都是 S → S
 final_state = reduce(lambda s, step: step(s), steps, init_state)
 ```
 

@@ -1,5 +1,5 @@
 ---
-description: 这篇教程面向的是只有一点离散数学基础或者实际编程经验的人；这篇教程主要讲集合、关系、函数、逻辑这四样东西与代码里的数据模型、外键、查询函数、业务规则怎么一一对上；目的是让读者拿到一段需求时，能先把它的静态结构写成没有歧义的集合和逻辑式。
+description: 这篇教程面向的是只有一点离散数学基础或者实际编程经验的人；这一篇讲集合、关系、函数、逻辑这四样东西与代码里的数据模型、外键、查询函数、业务规则怎么一一对上；目的是让读者拿到一段需求时，能先把它的静态结构写成没有歧义的集合和逻辑式。
 plots:
   - 业务需求
   - 哲学阐述
@@ -11,21 +11,23 @@ plots:
 
 ## 业务需求
 
-一个用户有哪些角色，现在存在用户表的一个字段里，值形如 `admin,dev`——逗号拼起来的一串文字。要判断某人是不是管理员，就在这串文字里找 `admin`。
+一笔支付钱是从哪个账户出的，现在存的是账户名的字符串。同一个账户改个名字，历史支付就对不上了；两个账户重名，也分不清是谁付的。
 
 这么存有两个躲不掉的问题。
 
-一是分不清「没有角色」和「角色名里正好含有 admin」。哪天有人加一个叫 `admin_readonly` 的角色，字符串匹配立刻误伤。
+一是字符串全靠约定维系。写错一个字母、改一次名、中间多一个空格，历史记录就失联，而且不会有任何地方报错。
 
-二是规则只能散着写。生意上有一条很硬的规则：只有管理员能删订单。它现在躺在某个删单接口的校验代码里，靠一次字符串包含判断。换个人再写一个删单入口，很容易忘了再判一次；也没有任何地方能一眼看到「系统里到底有哪些规则」。
+二是规则只能散着写。生意上有两条很硬的规则：每一笔支付都必须挂在某个账户上；退过款的支付单必须是付过款的。它们现在躺在各自的接口代码里，靠一两行判断。换个人再写一个入口，很容易忘了再判一次；也没有任何地方能一眼看到「系统里到底有哪些规则」。
+
+这一篇管静态的部分：有哪些东西、它们之间怎么关联、哪些断言永远为真。这些东西怎么随时间变化，是下一篇的事。
 
 ## 哲学阐述
 
 这一段要把上面那堆需求放回本体论与范畴论的坐标上：系统里到底有哪些东西存在，各自属于哪一类，那两条规则说的是什么。
 
-先列存在清单。这里有三类东西：用户、订单、角色，各是一个集合，集合里装着这一类东西的每一个实例。
+先列存在清单。这里有三类东西：账户、支付单，还有账户上的钱。前两类各是一个集合，集合里装着这一类东西的每一个实例；钱不是一个独立的东西，它是账户的一个属性，也就是一个从账户到数目的对应。
 
-再把关联归位。「谁下了哪一单」不是某个对象的属性，而是用户和订单两个集合之间的一层关系；「谁有哪些角色」同理。一次查询或一次计算是一次函数，比如按 id 查用户。那条硬规则「只有管理员能删订单」不是一个字段的值，而是一条关于世界的断言，也就是一个逻辑式。
+再把关联归位。「这笔钱是从哪个账户出的」不是某个对象的属性，而是支付单和账户两个集合之间的一层关系。按 id 查一笔支付是一次函数——查不到时它没有值，所以是个偏函数，不是普通函数。那两条硬规则不是任何字段的取值，而是关于世界的断言，也就是逻辑式。
 
 归完位，这一篇的边界也就清楚了：它管静态的部分——有哪些东西、它们之间怎么关联、哪些断言永远为真。这些东西怎么随时间变化，是下一篇的事。
 
@@ -34,180 +36,190 @@ plots:
 数据域是集合。
 
 ```text
-User = {alice, bob}
-Role = {admin, dev, viewer}
+Account = {acct_a, acct_b}
+Payment = {p1, p2}
 ```
 
-读作：用户集合里眼下有两个元素，角色集合里有三个。`u ∈ User` 读作「u 是用户集合里的一个元素」，也就是「u 是一个用户」。
+读作：账户集合里眼下有两个元素，支付单集合里有两个。`x ∈ Account` 读作「x 是账户集合里的一个元素」，也就是「x 是一个账户」。
 
 对象之间的关联是关系。
 
 ```text
-owns ⊆ User × Order
+billed_to ⊆ Payment × Account
+amount    : Payment → ℕ
 ```
 
-`×` 是笛卡尔积，`User × Order` 读作「所有（用户, 订单）的配对」。`owns` 是这些配对里的一部分，配进去的每一对，表示该用户下了该订单。数据库里的外键，数学上就是这个东西。
+第一行里 `×` 是笛卡尔积，`Payment × Account` 读作「所有（支付单, 账户）的配对」，`billed_to` 是这些配对里的一部分，配进去的每一对表示「这笔钱是从这个账户出的」。数据库里的外键就是它。第二行的 `amount` 读作：给一笔支付单，得到一个数目，也就是这笔的金额。
 
-关系的性质决定它能派什么用场。如果它自反、对称、又传递，就可以当等价关系用（分组、去重、规范化都能靠它说清楚）；如果它自反、传递、反对称，就可以当偏序关系用（排序、任务依赖、上下层关系靠它说清楚）。这些性质不用背，用到时回头查一次即可。
+关系的性质决定它能派什么用场。如果它自反、对称、又传递，就可以当等价关系用（分组、去重、规范化都靠它说清楚）；如果它自反、传递、反对称，就可以当偏序关系用（排序、依赖、上下层关系靠它说清楚）。这些性质不用背，用到时回头查一次即可。
 
-按 id 查用户、查某个用户的角色，是函数。
+按 id 查支付单是函数，而且是偏函数。
 
 ```text
-roles         : User → P(Role)
-getUserById   : UserId ⇸ User
+getPaymentById : PaymentId ⇸ Payment
 ```
 
-`roles` 读作：给一个用户，得到一组角色。`P(Role)` 是角色集合的所有子集，也就是「任意挑几个角色组成的一堆」，所以 `roles(alice) = {admin, dev}` 读作 alice 的角色是 admin 和 dev。
+用 `⇸` 不用 `→`，因为查不到时它没有值。`⇸` 读作「最多一个」，`→` 读作「恰好一个」；查不到就是「零个」。这两个符号的差别，就是代码里「返回可能为空」和「保证返回」的差别。
 
-`getUserById` 用 `⇸` 不用 `→`，因为查不到用户时它没有值。`⇸` 读作「最多一个」，`→` 读作「恰好一个」；一个查不到的 id 就是「零个」，所以这里是 `⇸`。这两个符号的区别就是代码里「返回可能为空」和「保证返回」的区别。
-
-需求是一条逻辑式。
+需求是逻辑式。
 
 ```text
-∀ u ∈ User · canDelete(u) ⇒ admin ∈ roles(u)
+dom(billed_to) = Payment
+∀ p ∈ Payment · refunded(p) ⇒ once_paid(p)
 ```
 
-读作：对每一个用户 u，如果他能删订单，那么 admin 在他的角色里。`∀` 读作「对每一个」，`∈` 读作「属于」，`⇒` 读作「如果左边成立，那么右边也必须成立」，中间的 `·` 只是把「对每一个」的范围和后面的断言隔开。
+第一条读作：凡是支付单，都在 `billed_to` 的定义域里——也就是每一笔支付都挂在某个账户上，没有例外。`dom` 读作「有定义的那些」，`=` 两边的集合相等。第二条读作：对每一笔支付单 p，如果它退过款，那它必须付过款。`∀` 读作「对每一个」，`⇒` 读作「如果左边成立，那么右边也必须成立」。
 
-要求「存在至少一个」时把 `∀` 换成 `∃`，读作「存在一个」。下面这条读作：存在一笔订单，它的金额大于一千。
+要求「至少存在一个」时把 `∀` 换成 `∃`，读作「存在一个」：
 
 ```text
-∃ o ∈ Order · total(o) > 1000
+∃ p ∈ Payment · amount(p) > 100000
 ```
 
-工程里的说法和这里一一对应，换算出问题的时候对着这张单子看：类型和数据模型对应集合；表和关联对应关系；查询与计算对应函数；业务规则对应逻辑式。
+读作：存在一笔支付单，金额大于十万。
+
+工程里的说法和这里一一对应，换算出问题的时候对着这张单子看：类型和数据模型对应集合；外键和关联对应关系；查询与计算对应函数；业务规则对应逻辑式。
 
 ## 代码实现
 
-同一条数据模型和规则，五种语言各写一遍。读一种就够，其余对着上一节看差异。
+同一份数据模型和规则，五种语言各写一遍。读一种就够，其余对着上一节看差异。
 
 ### Python
 
 ```python
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 
-class Role(Enum):
-    ADMIN  = "admin"
-    DEV    = "dev"
-    VIEWER = "viewer"
+class PaymentState(Enum):
+    UNPAID   = "unpaid"
+    PAID     = "paid"
+    REFUNDED = "refunded"
 
 @dataclass(frozen=True)
-class User:
+class Account:
     id: str
-    roles: frozenset[Role] = field(default_factory=frozenset)  # roles : User → P(Role)
+    balance: int
 
 @dataclass(frozen=True)
-class Order:
+class Payment:
     id: str
-    owner: str                                                 # owns ⊆ User × Order
+    state: PaymentState
+    billed_to: str          # 关系 billed_to ⊆ Payment × Account，落成外键
+    amount: int
 
-def can_delete(u: User) -> bool:                               # 逻辑式落点
-    return Role.ADMIN in u.roles
+def can_refund(p: Payment) -> bool:   # 规则落成校验函数
+    return p.state is PaymentState.PAID
 ```
 
 ### Rust
 
 ```rust
-use std::collections::HashSet;
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum PaymentState { Unpaid, Paid, Refunded }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum Role { Admin, Dev, Viewer }
+struct Account { id: String, balance: i64 }
 
-#[derive(Debug)]
-struct User {
+struct Payment {
     id: String,
-    roles: HashSet<Role>,   // roles : User → P(Role)
+    state: PaymentState,
+    billed_to: String,   // 外键
+    amount: i64,
 }
 
-#[derive(Debug)]
-struct Order {
-    id: String,
-    owner: String,          // owns ⊆ User × Order
-}
-
-fn can_delete(u: &User) -> bool {   // 逻辑式落点
-    u.roles.contains(&Role::Admin)
+fn can_refund(p: &Payment) -> bool {
+    p.state == PaymentState::Paid
 }
 ```
 
 ### Go
 
 ```go
-type Role string
+type PaymentState string
 
 const (
-	RoleAdmin  Role = "admin"
-	RoleDev    Role = "dev"
-	RoleViewer Role = "viewer"
+	Unpaid   PaymentState = "unpaid"
+	Paid     PaymentState = "paid"
+	Refunded PaymentState = "refunded"
 )
 
-type User struct {
-	ID    string
-	Roles map[Role]struct{} // roles : User → P(Role)
+type Account struct {
+	ID      string
+	Balance int64
 }
 
-type Order struct {
-	ID    string
-	Owner string // owns ⊆ User × Order
+type Payment struct {
+	ID       string
+	State    PaymentState
+	BilledTo string // 外键
+	Amount   int64
 }
 
-func CanDelete(u User) bool { // 逻辑式落点
-	_, ok := u.Roles[RoleAdmin]
-	return ok
+func CanRefund(p Payment) bool {
+	return p.State == Paid
 }
 ```
 
 ### Dart
 
 ```dart
-enum Role { admin, dev, viewer }
+enum PaymentState { unpaid, paid, refunded }
 
-class User {
+class Account {
   final String id;
-  final Set<Role> roles; // roles : User → P(Role)
-  const User(this.id, this.roles);
+  final int balance;
+  const Account(this.id, this.balance);
 }
 
-class Order {
+class Payment {
   final String id;
-  final String owner; // owns ⊆ User × Order
-  const Order(this.id, this.owner);
+  final PaymentState state;
+  final String billedTo; // 外键
+  final int amount;
+  const Payment(this.id, this.state, this.billedTo, this.amount);
 }
 
-bool canDelete(User u) => u.roles.contains(Role.admin); // 逻辑式落点
+bool canRefund(Payment p) => p.state == PaymentState.paid;
 ```
 
 ### TypeScript
 
 ```typescript
-type Role = "admin" | "dev" | "viewer";
+type PaymentState = "unpaid" | "paid" | "refunded";
 
-type User = { id: string; roles: Set<Role> };   // roles : User → P(Role)
-type Order = { id: string; owner: string };     // owns ⊆ User × Order
+type Account = { id: string; balance: number };
 
-function canDelete(u: User): boolean {          // 逻辑式落点
-  return u.roles.has("admin");
+type Payment = {
+  id: string;
+  state: PaymentState;
+  billedTo: string;   // 外键
+  amount: number;
+};
+
+export function canRefund(p: Payment): boolean {
+  return p.state === "paid";
 }
 ```
 
-角色从字符串换成一个取值范围被限死的类型（枚举、常量、联合类型），就是集合这件事在代码里的落点：`admin_readonly` 这种角色名进不来，「没有角色」和「有某个角色」不再靠字符串猜。`owner` 这个字段是关系 `owns` 的落点。`canDelete` 是那条逻辑式的落点——规则写成函数之后，「能删订单」和「是管理员」变成同一件事，蕴含关系落成了函数体本身。
+状态从字符串换成一个取值范围被限死的类型（枚举、常量、联合类型），就是集合这件事在代码里的落点：`Paid`、`paid`、`PAID` 三种拼法进不来，「没付过款」和「拼错了」不再靠字符串猜。`billedTo` 是关系 `billed_to` 的落点，`canRefund` 是那条规则（的代码版本）的落点。
+
+这里要留一句：外键在代码里常常只是一个字符串，真正拦住「挂到不存在的账户上」的是数据库上的外键约束，代码这边只负责别写错。规约里那条规则有人守——守它的可能是类型、是约束、是校验函数，也可能是一次属性测试，哪一样都行。
 
 ## 本单元练习
 
 设：
 
 ```text
-Users = {alice, bob}
-Roles = {admin, dev, viewer}
-assigned : Users → P(Roles)
+Accounts = {acct_a, acct_b}
+Payments = {p1, p2}
+billed_to : Payments → Accounts
+amount    : Payments → ℕ
 ```
 
-1. 写出 `assigned` 的数学类型，读一遍它的意思。
-2. 用一阶逻辑表达：「每个 admin 都必须有 dev 角色。」
-3. 用集合写：「没有任何用户同时是 viewer 和 admin。」
-4. 把下面这句话翻译成公式：用户登录后，若没有双因子认证，则不能被分配 admin 角色。
-5. 定义一个状态 `State = logged_in_users × pending_sessions`，再写一条不变量：pending session 的数量不超过 logged-in 用户的数量。
+1. 写出 `billed_to` 的数学类型，读一遍它的意思。
+2. 用一阶逻辑表达：「每一笔支付单都必须挂在一个账户上。」
+3. 用集合写：「没有任何一笔支付单同时挂在两个账户上。」
+4. 把下面这句话翻译成公式：退过款的支付单，金额必须等于原支付金额。
+5. 定义一个状态 `State = Payments × Accounts`，再写一条不变量：处于未付状态的支付单，金额不超过账户余额。
 
 练习不附答案。写完对着这四条自检：
 
