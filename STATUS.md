@@ -9,10 +9,10 @@
 - [`intro/metaphysics/metaphysics.md`](intro/metaphysics/metaphysics.md)：未评价
 - [`intro/metaphysics/ontology.md`](intro/metaphysics/ontology.md)：未评价
 - [`intro/metaphysics/category.md`](intro/metaphysics/category.md)：未评价
-- [`metaphysics/intro/index.md`](metaphysics/intro/index.md)：未评价
+- [`metaphysics/intro/index.md`](metaphysics/intro/index.md)：初步可用
 - [`metaphysics/intro/static-structure.md`](metaphysics/intro/static-structure.md)：初步可用
-- [`metaphysics/intro/state-machine.md`](metaphysics/intro/state-machine.md)：未评价
-- [`metaphysics/intro/composition.md`](metaphysics/intro/composition.md)：未评价
-- [`metaphysics/intro/refinement.md`](metaphysics/intro/refinement.md)：未评价
-- [`metaphysics/intro/interleaving.md`](metaphysics/intro/interleaving.md)：未评价
-- [`metaphysics/intro/categorical-view.md`](metaphysics/intro/categorical-view.md)：未评价
+- [`metaphysics/intro/state-machine.md`](metaphysics/intro/state-machine.md)：初步可用
+- [`metaphysics/intro/composition.md`](metaphysics/intro/composition.md)：初步可用
+- [`metaphysics/intro/refinement.md`](metaphysics/intro/refinement.md)：初步可用
+- [`metaphysics/intro/interleaving.md`](metaphysics/intro/interleaving.md)：初步可用
+- [`metaphysics/intro/categorical-view.md`](metaphysics/intro/categorical-view.md)：初步可用
