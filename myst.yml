@@ -22,6 +22,7 @@ project:
             - file: intro/metaphysics/ontologic_category.md
     - title: 形而上学
       children:
+        - file: metaphysics/intro/index.md
         - file: metaphysics/intro/static-structure.md
         - file: metaphysics/intro/state-machine.md
 site:
