@@ -26,6 +26,7 @@ project:
         - file: metaphysics/intro/index.md
         - file: metaphysics/intro/static-structure.md
         - file: metaphysics/intro/state-machine.md
+        - file: metaphysics/intro/composition.md
 site:
   template: book-theme
   title: 量潮元工程教程

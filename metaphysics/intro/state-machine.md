@@ -276,4 +276,4 @@ State ::= paid      : Bool
 3. 每个操作都能说清执行之后 inv 为什么仍然成立
 4. 能指出每条约束该放 pre 还是该放 inv，不混用
 
-上一篇：[用集合与逻辑描述系统的静态结构](./static-structure.md)
+上一篇：[用集合与逻辑描述系统的静态结构](./static-structure.md)　下一篇：[把多个状态组合成一个系统](./composition.md)
