@@ -1,0 +1,34 @@
+# See docs at: https://mystmd.org/guide/frontmatter
+version: 1
+project:
+  title: 量潮哲学教程
+  description: 按哲学分支组织的入门教程：学科分类、形而上学与本体论，以及形式化建模。
+  keywords: [哲学, 形而上学, 本体论, 形式化建模]
+  authors:
+    - name: QtTide
+      affiliation: 量潮科技
+  license: CC BY 4.0
+  open_access: true
+  github: https://github.com/quanttide/quanttide-tutorial-of-meta-engineering
+  toc:
+    - file: README.md
+    - title: 导论
+      children:
+        - file: intro/index.md
+        - title: 形而上学
+          children:
+            - file: intro/metaphysics/metaphysics.md
+            - file: intro/metaphysics/ontology.md
+            - file: intro/metaphysics/ontologic_category.md
+    - title: 形而上学
+      children:
+        - file: metaphysics/intro/static-structure.md
+        - file: metaphysics/intro/state-machine.md
+site:
+  template: book-theme
+  title: 量潮哲学教程
+  options:
+    folders: true
+  actions:
+    - title: GitHub
+      url: https://github.com/quanttide/quanttide-tutorial-of-meta-engineering
