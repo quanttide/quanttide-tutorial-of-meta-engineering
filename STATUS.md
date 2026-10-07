@@ -13,3 +13,6 @@
 - [`metaphysics/intro/static-structure.md`](metaphysics/intro/static-structure.md)：初步可用
 - [`metaphysics/intro/state-machine.md`](metaphysics/intro/state-machine.md)：未评价
 - [`metaphysics/intro/composition.md`](metaphysics/intro/composition.md)：未评价
+- [`metaphysics/intro/refinement.md`](metaphysics/intro/refinement.md)：未评价
+- [`metaphysics/intro/interleaving.md`](metaphysics/intro/interleaving.md)：未评价
+- [`metaphysics/intro/categorical-view.md`](metaphysics/intro/categorical-view.md)：未评价
