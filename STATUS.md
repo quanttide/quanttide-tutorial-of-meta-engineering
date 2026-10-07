@@ -11,4 +11,4 @@
 - [`intro/metaphysics/category.md`](intro/metaphysics/category.md)：未评价
 - [`metaphysics/intro/index.md`](metaphysics/intro/index.md)：未评价
 - [`metaphysics/intro/static-structure.md`](metaphysics/intro/static-structure.md)：初步可用
-- [`metaphysics/intro/state-machine.md`](metaphysics/intro/state-machine.md)：初步可用
+- [`metaphysics/intro/state-machine.md`](metaphysics/intro/state-machine.md)：未评价

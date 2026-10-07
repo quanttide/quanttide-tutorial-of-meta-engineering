@@ -81,167 +81,179 @@ Refund:
 
 ## 代码实现
 
-同一条规则，五种语言各写一遍。读一种就够，其余对着上一节那三条 pre 看差异。
+上面那份规约是给人和检查器看的。落到代码时，各语言能承接的东西不一样，所以下面五份的形状不一样——它们不是同一份规约的五种拼写，也不必指望逐行对应。每份末尾一句说清它把规矩放在了哪里。
 
 ### Python
 
 ```python
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from enum import Enum
 
-@dataclass
+class State(Enum):
+    UNPAID  = "unpaid"
+    PAID    = "paid"
+    SHIPPED = "shipped"
+
+@dataclass(frozen=True)
 class Order:
-    paid: bool = False
-    shipped: bool = False
+    state: State = State.UNPAID
 
-    def invariant(self) -> bool:          # inv: shipped ⇒ paid
-        return not (self.shipped and not self.paid)
-
-    def pay(self) -> None:
-        if self.paid:                     # pre: ¬paid
+    def pay(self) -> "Order":
+        if self.state is not State.UNPAID:
             raise ValueError("已经付过了")
-        self.paid = True                  # post
+        return replace(self, state=State.PAID)
 
-    def ship(self) -> None:
-        if not self.paid:                 # pre: paid
+    def ship(self) -> "Order":
+        if self.state is not State.PAID:
             raise ValueError("没付款不能发货")
-        self.shipped = True
+        return replace(self, state=State.SHIPPED)
 
-    def refund(self) -> None:
-        if not self.paid or self.shipped: # pre: paid ∧ ¬shipped
+    def refund(self) -> "Order":
+        if self.state is not State.PAID:
             raise ValueError("发货之后不能退款")
-        self.paid = False
+        return replace(self, state=State.UNPAID)
 ```
+
+枚举把取值限死在三个里，`frozen` 挡住就地改写，状态只能由这三个方法产生。规矩落在类型和构造上，运行时没有反复执行的检查。
 
 ### Rust
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq)]
-struct Order { paid: bool, shipped: bool }
+enum Order { Unpaid, Paid, Shipped }
 
 impl Order {
-    fn invariant(&self) -> bool {         // inv: shipped ⇒ paid
-        !self.shipped || self.paid
-    }
-
-    fn pay(&mut self) -> Result<(), &'static str> {
-        if self.paid { return Err("已经付过了"); }     // pre: ¬paid
-        self.paid = true;                             // post
-        Ok(())
-    }
-
-    fn ship(&mut self) -> Result<(), &'static str> {
-        if !self.paid { return Err("没付款不能发货"); } // pre: paid
-        self.shipped = true;
-        Ok(())
-    }
-
-    fn refund(&mut self) -> Result<(), &'static str> {
-        if !self.paid || self.shipped {               // pre: paid ∧ ¬shipped
-            return Err("发货之后不能退款");
+    fn pay(self) -> Result<Self, &'static str> {
+        match self {
+            Self::Unpaid => Ok(Self::Paid),
+            _ => Err("已经付过了"),
         }
-        self.paid = false;
-        Ok(())
+    }
+
+    fn ship(self) -> Result<Self, &'static str> {
+        match self {
+            Self::Paid => Ok(Self::Shipped),
+            _ => Err("没付款不能发货"),
+        }
+    }
+
+    fn refund(self) -> Result<Self, &'static str> {
+        match self {
+            Self::Paid => Ok(Self::Unpaid),
+            _ => Err("发货之后不能退款"),
+        }
     }
 }
 ```
+
+三个变体就是三个状态，`match` 的每个分支就是「什么时候允许做」那句话。非法路径没有分支可走，编译期就挡住。
 
 ### Go
 
 ```go
-type Order struct {
-	Paid    bool
-	Shipped bool
-}
+type state int
 
-func (o *Order) Invariant() bool { // inv: shipped ⇒ paid
-	return !o.Shipped || o.Paid
-}
+const (
+	unpaid state = iota
+	paid
+	shipped
+)
 
-func (o *Order) Pay() error {
-	if o.Paid { // pre: ¬paid
-		return errors.New("已经付过了")
+type Order struct{ state state } // 字段不导出
+
+func NewOrder(s state) (Order, error) {
+	if s < unpaid || s > shipped {
+		return Order{}, errors.New("未知状态")
 	}
-	o.Paid = true // post
-	return nil
+	return Order{state: s}, nil
 }
 
-func (o *Order) Ship() error {
-	if !o.Paid { // pre: paid
-		return errors.New("没付款不能发货")
+func (o Order) Pay() (Order, error) {
+	if o.state != unpaid {
+		return o, errors.New("已经付过了")
 	}
-	o.Shipped = true
-	return nil
+	return Order{state: paid}, nil
 }
 
-func (o *Order) Refund() error {
-	if !o.Paid || o.Shipped { // pre: paid ∧ ¬shipped
-		return errors.New("发货之后不能退款")
+func (o Order) Ship() (Order, error) {
+	if o.state != paid {
+		return o, errors.New("没付款不能发货")
 	}
-	o.Paid = false
-	return nil
+	return Order{state: shipped}, nil
+}
+
+func (o Order) Refund() (Order, error) {
+	if o.state != paid {
+		return o, errors.New("发货之后不能退款")
+	}
+	return Order{state: unpaid}, nil
 }
 ```
+
+Go 没有和类型，表达不了「三选一」。它靠把字段藏起来：别的包连字段名都写不出来，状态只能从 `NewOrder` 或者这几个方法拿到。零值 `Order{}` 仍然合法（等于 `unpaid`），这是 Go 要留神的缝。
 
 ### Dart
 
 ```dart
-class Order {
-  bool paid = false;
-  bool shipped = false;
+sealed class Order {
+  const Order();
+}
 
-  bool get invariant => !shipped || paid;   // inv: shipped ⇒ paid
+class Unpaid extends Order { const Unpaid(); }
+class Paid extends Order { const Paid(); }
+class Shipped extends Order { const Shipped(); }
 
-  void pay() {
-    if (paid) throw StateError('已经付过了');          // pre: ¬paid
-    paid = true;                                       // post
-  }
+Order pay(Order o) {
+  if (o is Unpaid) return const Paid();
+  throw StateError('已经付过了');
+}
 
-  void ship() {
-    if (!paid) throw StateError('没付款不能发货');       // pre: paid
-    shipped = true;
-  }
+Order ship(Order o) {
+  if (o is Paid) return const Shipped();
+  throw StateError('没付款不能发货');
+}
 
-  void refund() {
-    if (!paid || shipped) throw StateError('发货之后不能退款'); // pre: paid ∧ ¬shipped
-    paid = false;
-  }
+Order refund(Order o) {
+  if (o is Paid) return const Unpaid();
+  throw StateError('发货之后不能退款');
 }
 ```
+
+`sealed` 让这三个子类成为封闭集合，`switch` 的时候编译器会替你查有没有漏；状态本身没有可变字段，变化只能换一个新的。
 
 ### TypeScript
 
 ```typescript
-type Order = { paid: boolean; shipped: boolean };
-
-export function invariant(o: Order): boolean { // inv: shipped ⇒ paid
-  return !o.shipped || o.paid;
-}
+type Order =
+  | { readonly state: "unpaid" }
+  | { readonly state: "paid" }
+  | { readonly state: "shipped" };
 
 export function pay(o: Order): Order {
-  if (o.paid) throw new Error("已经付过了");            // pre: ¬paid
-  return { ...o, paid: true };                          // post
+  if (o.state !== "unpaid") throw new Error("已经付过了");
+  return { state: "paid" };
 }
 
 export function ship(o: Order): Order {
-  if (!o.paid) throw new Error("没付款不能发货");         // pre: paid
-  return { ...o, shipped: true };
+  if (o.state !== "paid") throw new Error("没付款不能发货");
+  return { state: "shipped" };
 }
 
 export function refund(o: Order): Order {
-  if (!o.paid || o.shipped) throw new Error("发货之后不能退款"); // pre: paid ∧ ¬shipped
-  return { ...o, paid: false };
+  if (o.state !== "paid") throw new Error("发货之后不能退款");
+  return { state: "unpaid" };
 }
 ```
 
-同一个 pre，五种语言只是换个表达方式：Python、Dart、TypeScript 抛异常，Rust 返回 `Result`，Go 返回 `error`。`inv` 五处长得几乎一样，都是 `!shipped || paid`——它就是 `shipped ⇒ paid` 的机械翻译（`A ⇒ B` 等价于 `¬A ∨ B`）。状态放哪儿也分两派：Python、Rust、Go、Dart 改对象本身，TypeScript 那份返回新对象，旧状态不动。
+联合类型把三个状态写成三个变体，`readonly` 挡住就地改写；判断收窄到某个变体之后，编译器知道剩下的只可能是合法的那一步。
 
-Rust 和 TypeScript 还有另一条路：把 `paid`、`shipped` 两个字段收成一个状态字段（Rust 的 `enum Order { Unpaid, Paid, Shipped }`、TypeScript 的联合类型），非法组合在类型层面就不存在，`inv` 用不着写。那是另一条路，前提是状态集中在一个字段里；这套教程教的是状态散在两个字段、靠 inv 兜底的写法，因为生产系统里多半就是散着的。
+五份代码里没有一处 `invariant()`，也没有哪一行对着上面那条 `inv` 逐字翻译。规约层用两个布尔字段写，是因为这条规矩本来就在讲那两个字段的组合——真写成单一状态字段，那条 `inv` 就没地方写，规矩也就看不见了。反过来落到代码里，各语言更愿意把状态收成一个字段，这条规矩被别的东西替掉：上面四份是被类型替掉的，Go 那份是被「字段不导出、只能经方法产生」替掉的；库里如果还留着两个布尔列，转换放在边界上，进到领域只剩一个状态字段。
 
-有一件事要交代清楚：上面五份代码都写了一个 `invariant()`，那是教学写法——让「不变量」在代码里有个看得见的落点，五份因此能逐行对照。工程上更常见的是它不存在，因为不变量会被别的东西吸收掉：被类型吸收（枚举、联合类型、sealed class，非法状态写不出来）；被门口吸收（字段私有，状态只能经构造函数和操作方法产生，持久层再加 CHECK 约束）；被测试吸收（属性测试随机生成操作序列，每一步之后断言 `inv` 仍成立）；被离线工具吸收（TLA+、Alloy 这类模型检查器，Dafny、SPARK 这类带契约的验证器）。
+常见去处还有两个：被测试替掉（属性测试随机生成操作序列，每一步之后断言不变量仍成立），被离线工具替掉（TLA+、Alloy 这类模型检查器，Dafny、SPARK 这类带契约的验证器）；持久层再加一条 CHECK 约束，任何写路径都绕不过。
 
-四样里最优雅的一格是让状态本身成为类型：操作只挂在对应的状态类型上，`unpaid.ship()`、`shipped.refund()` 在编译期就不合法。Rust、TypeScript 这类语言写得出来，代价是类型数量随状态数增长，只适合状态少、变更慢的地方；Go 表达不了，回到门口守。
+再往前还有一格：让状态本身成为类型参数，操作只挂在对应的状态类型上，`unpaid.ship()`、`shipped.refund()` 在编译期就不合法。Rust、TypeScript 这类语言写得出来，代价是类型数量随状态数增长，只适合状态少、变更慢的地方；Go 表达不了。
 
-所以数学表达和代码实现不必一一对应。规约层写 `inv`，是为了把「哪些组合不许出现」说清楚，这一步跟语言无关，不能跳；落到代码时，这条 `inv` 可以被类型、约束、测试或证明工具整体替代。数学推理是工具，不是教条。
+所以数学表达和代码实现不必一一对应。规约层写 `inv`，是为了把规则说清楚，这一步跟语言无关，不能跳；落到代码时，它常常整条不用写。数学推理是工具，不是教条。
 
 ## 本单元练习
 
