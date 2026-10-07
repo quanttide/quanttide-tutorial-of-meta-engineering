@@ -1,6 +1,6 @@
-# quanttide-tutorial-of-philosophy
+# quanttide-tutorial-of-meta-engineering
 
-量潮哲学教程——按哲学分支组织的入门教程。
+量潮元工程教程——从哲学分支进入形式化建模的入门教程。
 
 ## 概述
 

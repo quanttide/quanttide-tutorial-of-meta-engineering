@@ -1,7 +1,7 @@
 # See docs at: https://mystmd.org/guide/frontmatter
 version: 1
 project:
-  title: 量潮哲学教程
+  title: 量潮元工程教程
   description: 按哲学分支组织的入门教程：学科分类、形而上学与本体论，以及形式化建模。
   keywords: [哲学, 形而上学, 本体论, 形式化建模]
   authors:
@@ -26,7 +26,7 @@ project:
         - file: metaphysics/intro/state-machine.md
 site:
   template: book-theme
-  title: 量潮哲学教程
+  title: 量潮元工程教程
   options:
     folders: true
   actions:
