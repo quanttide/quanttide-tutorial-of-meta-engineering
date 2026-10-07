@@ -20,4 +20,4 @@ plots:
 
 列这份清单，正是下一章里「意图澄清」那一步要干的活：把一段需求里的名词逐个钉到清单上、说清边界。清单列好之后的形状，可以看 [用集合与逻辑描述系统的静态结构](../../metaphysics/intro/static-structure.md)。
 
-下一篇：[范畴论](./ontologic_category.md)
+下一篇：[范畴论](./category.md)
