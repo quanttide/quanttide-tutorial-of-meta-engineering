@@ -8,5 +8,5 @@
 - [`intro/metaphysics/metaphysics.md`](intro/metaphysics/metaphysics.md)：未评价
 - [`intro/metaphysics/ontology.md`](intro/metaphysics/ontology.md)：未评价
 - [`intro/metaphysics/ontologic_category.md`](intro/metaphysics/ontologic_category.md)：未评价
-- [`metaphysics/intro/static-structure.md`](metaphysics/intro/static-structure.md)：未评价
-- [`metaphysics/intro/state-machine.md`](metaphysics/intro/state-machine.md)：初步可读
+- [`metaphysics/intro/static-structure.md`](metaphysics/intro/static-structure.md)：初步可用
+- [`metaphysics/intro/state-machine.md`](metaphysics/intro/state-machine.md)：初步可用
