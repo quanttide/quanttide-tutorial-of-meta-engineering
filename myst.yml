@@ -15,6 +15,7 @@ project:
     - title: 导论
       children:
         - file: intro/index.md
+        - file: intro/metaphysics.md
     - title: 形而上学
       children:
         - file: metaphysics/intro/index.md
