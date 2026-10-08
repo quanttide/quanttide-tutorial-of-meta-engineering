@@ -2,13 +2,9 @@
 
 本仓给 AI 的工作说明。
 
-## 倒序目录
+## 概念稿在图书馆
 
-`intro/metaphysics/` 和 `metaphysics/intro/` 两个目录名互为倒序。这是刻意设置的，不是笔误。
-
-`intro/` 章的主要功能是帮助读者引入整个元工程体系的主要概念，`intro/metaphysics/` 是这一章里的形而上学部分，收形而上学、本体论、范畴论三篇。`metaphysics/intro/` 是形而上学部分的入门，职能不同：引入形而上学的分析方法，收形式化建模两篇（`static-structure.md`、`state-machine.md`，自元工程语境仓转入）。
-
-AI 不得合并这两个目录、不得改名，也不得把其中一个挪到另一个之下；不要向用户提「建议合并」。
+`intro/` 章的形而上学、本体论、范畴论三篇概念稿已移入图书馆仓（`quanttide-library-of-meta-engineering`）作参考资料，本仓不再收录。本仓的 `metaphysics/intro/` 是形而上学的方法正课，职能不同：引入形而上学的分析方法。
 
 ## 数学是工具，不是教条
 
