@@ -2,8 +2,8 @@
 version: 1
 project:
   title: 量潮元工程教程
-  description: 按哲学分支组织的入门教程：学科分类、形而上学与本体论，以及形式化建模。
-  keywords: [哲学, 形而上学, 本体论, 形式化建模]
+  description: 元工程入门教程：四个阶段、形而上学识别问题与形式化建模正课。
+  keywords: [哲学, 形而上学, 本体论, 四个阶段, 形式化建模]
   authors:
     - name: QtTide
       affiliation: 量潮科技
@@ -14,7 +14,7 @@ project:
     - file: README.md
     - title: 导论
       children:
-        - file: intro/index.md
+        - file: intro/layer.md
         - file: intro/metaphysics.md
     - title: 形而上学
       children:
