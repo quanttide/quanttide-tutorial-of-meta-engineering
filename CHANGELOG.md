@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [Unreleased]
+
+- 《四个阶段》教程（`intro/layer.md`）随领域边界重划迁至软件工程教程仓（quanttide-tutorial-of-software-engineering `intro/layer.md`）；`README` 目录与 `myst.yml` 同步摘除，本仓教程只留形而上学一支
+
 ## [0.1.2] — 2026-10-10
 
 - 方法论升级为四个阶段：需求、意图、规格、实现——`metaphysics/intro/` 七篇全部按新框架重写，哲学阐述与数学表达合并为意图（数理逻辑形式化验证），新增语言无关的规格一节，代码实现改称实现；`README`、`CONTRIBUTING`、`AGENTS` 同步改名
