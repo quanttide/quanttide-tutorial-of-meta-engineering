@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- 六篇形式化正课与《形而上学入门》入口随领域边界重划迁至软件工程教程仓（quanttide-tutorial-of-software-engineering `formalization/`）；`metaphysics/intro/index.md` 改为指针页，`README`、`myst.yml`、`STATUS`、`AGENTS` 同步
 - 《四个阶段》教程（`intro/layer.md`）随领域边界重划迁至软件工程教程仓（quanttide-tutorial-of-software-engineering `intro/layer.md`）；`README` 目录与 `myst.yml` 同步摘除，本仓教程只留形而上学一支
 
 ## [0.1.2] — 2026-10-10

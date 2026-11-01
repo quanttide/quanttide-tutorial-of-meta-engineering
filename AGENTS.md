@@ -4,7 +4,7 @@
 
 ## 概念稿在图书馆
 
-`intro/` 章的形而上学、本体论、范畴论三篇概念稿已移入图书馆仓（`quanttide-library-of-meta-engineering`）作参考资料，本仓不再收录。本仓的 `metaphysics/intro/` 是形而上学的方法正课，职能不同：引入形而上学的分析方法。
+`intro/` 章的形而上学、本体论、范畴论三篇概念稿已移入图书馆仓（`quanttide-library-of-meta-engineering`）作参考资料，本仓不再收录。六篇形式化正课已随领域边界重划迁至软件工程教程仓（`quanttide-tutorial-of-software-engineering`）`formalization/`，`metaphysics/intro/` 只剩指针页；本仓保留的是 `intro/metaphysics.md` 的识别问题六步法。
 
 ## 数学是工具，不是教条
 
